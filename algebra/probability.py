@@ -36,6 +36,7 @@ P(M, M) = 1/4
 P(M, H) = 1/2
 P((M,M), M) = (1/4) / (1/2) = 1/2
 """
+
 import random
 from math import pi, sqrt, exp, erf
 
@@ -312,5 +313,71 @@ def inverse_normal_cumulative_distribution(p: float, mu=0, sigma=1, tolerance=0.
             break
 
     return mid_z
+
+
+def bernoulli_trial(p) -> int:
+    return 1 if random.random() < p else 0
+
+
+def binomial(n, p):
+    return sum(bernoulli_trial(p) for _ in range(n))
+
+
+############################################################################################################
+# Teste Estatístico de Hipótese
+
+
+def normal_approximation_to_binomial(n, p):
+    """ Encontra mi e sigma correspondendo ao Binomial(n, p) """
+
+    mu = p * n
+    sigma = sqrt(p * (1 - p) * n)
+
+    return mu, sigma
+
+
+# o cumulative distribution normal é a probabilidade que a variável esteja abaixo de um limite
+normal_probability_below = normal_cumulative_distribution
+
+
+# está acima do limite se não estiver abaixo
+def normal_probability_above(lo, mu=0, sigma=1):
+    return 1 - normal_cumulative_distribution(lo, mu, sigma)
+
+
+# está entre se for menos do que hi, mas não menor do que lo
+def normal_probability_between(lo, hi, mu=0, sigma=1):
+    return normal_cumulative_distribution(hi, mu, sigma) - normal_cumulative_distribution(lo, mu, sigma)
+
+
+# está fora se não estiver entre
+def normal_probability_outside(lo, hi, mu=0, sigma=1):
+    return 1 - normal_probability_between(lo, hi, mu, sigma)
+
+####################################################################################################################
+
+
+def normal_upper_bound(probability, mu=0, sigma=1):
+    """ retorna z para que p(Z <= z) = probability """
+    return inverse_normal_cumulative_distribution(probability, mu, sigma)
+
+
+def normal_lower_bound(probability, mu=0, sigma=1):
+    """ retorna z para que p(Z >= z) = probability """
+    return inverse_normal_cumulative_distribution(1 - probability, mu, sigma)
+
+
+def normal_two_sided_bounds(probability, mu=0, sigma=1):
+    """ retorna os limites simétricos (sobre a média) que contêm a probabilidade específica """
+    tail_probability = (1 - probability) / 2
+
+    # limite superior deveria ter tail_probability acima
+    upper_bound = normal_lower_bound(tail_probability, mu, sigma)
+
+    # limite inferior deveria ter tail_probability abaixo
+    lower_bound = normal_upper_bound(tail_probability, mu, sigma)
+
+    return lower_bound, upper_bound
+
 
 
